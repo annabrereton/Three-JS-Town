@@ -20,3 +20,18 @@ canvas {
 button { 
     margin-top: 10px; 
 }
+
+#compassContainer {
+    /* position: absolute; */
+    top: 30px;
+    right: 100px;
+    width: 10vw; /* Use viewport width units for responsiveness */
+    height: 10vw; /* Maintain aspect ratio */
+    max-width: 100px; /* Optional: set maximum size */
+    max-height: 100px; /* Optional: set maximum size */
+    pointer-events: none; /* Makes sure compass doesn't interfere with mouse events */
+}
+
+svg {
+    transform-origin: center center;
+  }

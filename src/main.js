@@ -20,7 +20,6 @@ document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled = true; // ENABLE SHADOWMAP
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional: for softer shadows
 
-
 // CREATE LIGHTS
 // AMBIENT
 const ambientLight = new THREE.AmbientLight(0x404040, 1); // Soft white light
@@ -165,7 +164,8 @@ scene.add( sky );
 
 // ORBITCONTROLS FOR NAVIGATION
 const orbitControls = new OrbitControls(camera, renderer.domElement);
-orbitControls.target.set(0, 0, 0);  // Set the point the camera should orbit around
+// orbitControls.target.set(0, 0, 0);  // Set the point the camera should orbit around
+
 
 // FIRSTPERSONCONTROLS FOR NAVIGATION
 const firstPersonControls = new FirstPersonControls(camera, renderer.domElement);
@@ -208,6 +208,41 @@ document.getElementById('fpControls').addEventListener('click', () => {
 setStaticLight();
 toggleControlsMode('orbit');
 
+// CREATE COMPASS
+// Grid helper
+// var grid = new THREE.GridHelper(10, 10, "aqua", "gray");
+// scene.add(grid);
+
+var sph = new THREE.Spherical();
+var dir = new THREE.Vector3();
+var lastTheta = null;  // Track the last theta value
+const EPSILON = 0.001; // Threshold to determine significant change
+
+// Debugging statement to confirm initialization
+console.log('sph initialized:', sph);
+console.log('THREE.MathUtils available:', THREE.MathUtils);
+
+// renderer.setAnimationLoop(() => {
+//   renderer.render(scene, camera);
+//   camera.getWorldDirection(dir);
+//   sph.setFromVector3(dir);
+//   compass.style.transform = `rotate(${THREE.Math.radToDeg(sph.theta) - 180}deg)`;
+// });
+
+// const textureLoader = new THREE.TextureLoader();
+// const compassTexture = textureLoader.load('/assets/compass_rose.svg');
+
+// const compassGeometry = new THREE.PlaneGeometry(6, 6); // Size of the compass plane
+// const compassMaterial = new THREE.MeshBasicMaterial({ map: compassTexture, transparent: true, side: THREE.DoubleSide });
+// const compassPlane = new THREE.Mesh(compassGeometry, compassMaterial);
+
+// // Position the compass plane at the desired location
+// compassPlane.position.set(-40, 20, 0); // Slightly above the ground to avoid z-fighting
+// compassPlane.rotation.x = -Math.PI / 2; // Lay flat on the ground (rotate 90 degrees around the X-axis)
+// compassPlane.rotation.z = Math.PI / 2; 
+// compassPlane.rotation.y = Math.PI / 2; 
+
+// scene.add(compassPlane);
 
 // CREATE GROUND
 const groundGeometry = new THREE.PlaneGeometry(2500, 2500);  // Large ground plane
@@ -260,21 +295,6 @@ scene.add(northRoad);
         doorGroup.add(doorBase);
         doorGroup.add(doorCurve);
         return doorGroup;
-    };
-
-    // CREATE TRIANGULAR WINDOW
-    var WindowTriangle = function(materials) {
-        materials = materials || materials_default;
-        let geometry = new THREE.BufferGeometry();
-        let vertices = new Float32Array([
-            -0.2, 0, 0,
-            0.5, 1, 0,
-            1.2, 0, 0
-        ]);
-        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        geometry.computeVertexNormals();
-        geometry.addGroup(0, 3, 0);
-        return new THREE.Mesh(geometry, materials.window);
     };
 
     // CREATE CIRCULAR WINDOW
@@ -603,13 +623,51 @@ window.addEventListener('click', (event) => {
 
 });
 
+// WINDOW RESIZING
+function onWindowResize() {
+    // Update camera aspect ratio and renderer size
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Update compass size and position
+    const compassContainer = document.getElementById('compassContainer');
+    compassContainer.style.width = '10vw'; // Adjust as needed
+    compassContainer.style.height = '10vw'; // Adjust as needed
+}
+
+// Add event listener for window resize
+window.addEventListener('resize', onWindowResize, false);
+
 // ANIMATE/RENDER
 function animate() {
     requestAnimationFrame(animate);
     if (!useDaylightSimulation) setStaticLight(); // Ensure static light if not using daylight simulation
-    // if (useDaylightSimulation) animateDaylight();
+
     orbitControls.update();
     firstPersonControls.update(0.1);
+
+    // Update compass rotation
+    // camera.getWorldDirection(dir);
+    // sph.setFromVector3(dir);
+    // compass.style.transform = `rotate(${THREE.MathUtils.radToDeg(sph.theta) - 180}deg)`;
+    // Debugging statements
+
+    // Update compass rotation only if there is a significant change
+    if (camera && dir && sph) {
+        camera.getWorldDirection(dir);
+        sph.setFromVector3(dir);
+
+        if (lastTheta === null || Math.abs(sph.theta - lastTheta) > EPSILON) {
+            lastTheta = sph.theta;
+            document.getElementById('compassContainer').style.transform = `rotate(${THREE.MathUtils.radToDeg(sph.theta) - 180}deg)`;
+            console.log('Updated Compass:', THREE.MathUtils.radToDeg(sph.theta)); // Debug output
+        }
+    } else {
+        console.error('Required variables are not defined.');
+    }
+
+    // Render the scene
     renderer.render(scene, camera);
 }
 animate();
