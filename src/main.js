@@ -4,6 +4,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 
 // CREATE SCENE
 const scene = new THREE.Scene();
@@ -219,8 +221,8 @@ var lastTheta = null;  // Track the last theta value
 const EPSILON = 0.001; // Threshold to determine significant change
 
 // Debugging statement to confirm initialization
-console.log('sph initialized:', sph);
-console.log('THREE.MathUtils available:', THREE.MathUtils);
+// console.log('sph initialized:', sph);
+// console.log('THREE.MathUtils available:', THREE.MathUtils);
 
 
 // Another Compass
@@ -625,6 +627,134 @@ window.addEventListener('click', (event) => {
 
 });
 
+
+
+// Load the tree model
+// const loader = new GLTFLoader();
+// loader.load('assets/my_first_tree_group.glb', function (gltf) {
+//     const tree = gltf.scene;
+//     scene.add(tree);
+
+
+
+//     tree.position.set(50, -1.1, 50);  // Position the tree in your scene
+//     tree.receiveShadow = true;
+//     tree.castShadow = true;
+
+//         // Log the structure to the console
+//         console.log('Tree group: ', tree);
+
+// }, undefined, function (error) {
+//     console.error(error);
+// });
+
+
+// Declare variables to store references to specific parts of the tree group
+let tree1trunk, tree2trunk, tree3trunk, tree4trunk, tree5trunk;
+let tree1leaves, tree2leaves, tree3leaves, tree4leaves, tree5leaves;
+
+const loader = new GLTFLoader();
+loader.load('assets/my_first_tree_group.glb', function (gltf) {
+    const treeGroup = gltf.scene;
+    scene.add(treeGroup);
+
+    // Traverse through the tree group to find the specific parts
+    treeGroup.traverse(function (child) {
+        if (child.isMesh) {
+            
+            child.material = child.material.clone();  // Clone material to avoid shared material issues
+            child.castShadow = true;    // Enable shadow casting for trunks
+            child.receiveShadow = true; // Enable shadow receiving for trunks
+
+            // Assign trunks
+            switch (child.name) {
+                case 'tree1trunk':
+                    tree1trunk = child;
+                    break;
+                case 'tree2trunk':
+                    tree2trunk = child;
+                    break;
+                case 'tree3trunk':
+                    tree3trunk = child;
+                    break;
+                case 'tree4trunk':
+                    tree4trunk = child;
+                    break;
+                case 'tree5trunk':
+                    tree5trunk = child;
+                    break;
+                default:
+                    console.log('Unrecognized part:', child.name);
+            }
+        } else if (child.isGroup) {
+
+            child.traverse(function (groupChild) {
+                if (groupChild.isMesh) {
+                    groupChild.material = groupChild.material.clone();
+                    groupChild.castShadow = true;    // Enable shadow casting for leaves
+                    groupChild.receiveShadow = true; // Enable shadow receiving for leaves
+                }
+            });
+
+            // Assign leaves groups
+            switch (child.name) {
+                case 'tree1leaves':
+                    tree1leaves = child;
+                    break;
+                case 'tree2leaves':
+                    tree2leaves = child;
+                    break;
+                case 'tree3leaves':
+                    tree3leaves = child;
+                    break;
+                case 'tree4leaves':
+                    tree4leaves = child;
+                    break;
+                case 'tree5leaves':
+                    tree5leaves = child;
+                    break;
+                default:
+                    console.log('Unrecognized part:', child.name);
+            }
+        }
+    });
+
+    // Set the color of each trunk individually
+    tree1trunk.material.color.set(0x8B4513); // Brown
+    tree2trunk.material.color.set(0xA52A2A); // Another brown
+    tree3trunk.material.color.set(0xD2691E); // Chocolate
+    tree4trunk.material.color.set(0x8B4513); // Brown
+    tree5trunk.material.color.set(0xFF69b4); // Orange
+
+    // Set the colour of leaves group
+    tree1leaves.traverse(function (child) {
+        if (child.isMesh) {
+            // Clone material to avoid affecting other instances
+            child.material = child.material.clone();
+            child.material.color.set(0x55C135); // Set the color to green
+        }
+    });
+
+    // Set positions for each trunk and leaves individually
+    tree1trunk.position.set(-25, -1, -25);
+    tree1leaves.position.set(-25, -1, -25);
+    tree2trunk.position.set(25, -1, 30);
+    tree2leaves.position.set(25, -1, 30);
+    tree3trunk.position.set(35, -1, 40);
+    tree3leaves.position.set(35, -1, 40);
+    tree4trunk.position.set(25, -0.5, 90);
+    tree4leaves.position.set(25, -0.5, 90);
+    tree5trunk.position.set(15, -0.5, 110);
+    tree5leaves.position.set(15, -0.5, 110);
+
+}, undefined, function (error) {
+    console.error(error);
+});
+
+
+
+
+
 // WINDOW RESIZING
 function onWindowResize() {
     // Update camera aspect ratio and renderer size
@@ -663,7 +793,7 @@ function animate() {
         if (lastTheta === null || Math.abs(sph.theta - lastTheta) > EPSILON) {
             lastTheta = sph.theta;
             document.getElementById('compassContainer').style.transform = `rotate(${THREE.MathUtils.radToDeg(sph.theta) - 180}deg)`;
-            console.log('Updated Compass:', THREE.MathUtils.radToDeg(sph.theta)); // Debug output
+            // console.log('Updated Compass:', THREE.MathUtils.radToDeg(sph.theta)); // Debug output
         }
     } else {
         console.error('Required variables are not defined.');
