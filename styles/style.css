@@ -23,8 +23,8 @@ button {
 
 #compassContainer {
     /* position: absolute; */
-    top: 30px;
-    right: 100px;
+    top: 80px;
+    right: 120px;
     width: 10vw; /* Use viewport width units for responsiveness */
     height: 10vw; /* Maintain aspect ratio */
     max-width: 100px; /* Optional: set maximum size */

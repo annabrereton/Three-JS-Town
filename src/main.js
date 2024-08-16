@@ -222,13 +222,8 @@ const EPSILON = 0.001; // Threshold to determine significant change
 console.log('sph initialized:', sph);
 console.log('THREE.MathUtils available:', THREE.MathUtils);
 
-// renderer.setAnimationLoop(() => {
-//   renderer.render(scene, camera);
-//   camera.getWorldDirection(dir);
-//   sph.setFromVector3(dir);
-//   compass.style.transform = `rotate(${THREE.Math.radToDeg(sph.theta) - 180}deg)`;
-// });
 
+// Another Compass
 // const textureLoader = new THREE.TextureLoader();
 // const compassTexture = textureLoader.load('/assets/compass_rose.svg');
 
@@ -462,23 +457,30 @@ function createRandomHouse(relativeX, relativeZ, streetGroup, rotateY = 0, stree
     const windowType = ['rectangular', 'circular']
     const baseAndTriColor = baseColors[Math.floor(Math.random() * baseColors.length)];
     
+    const scale = Math.random() * 0.5 + 0.75; // House scale
+
     const house = HouseMod.create({
         baseColor: baseAndTriColor,
         triColor: baseAndTriColor,
         roofColor: roofColors[Math.floor(Math.random() * roofColors.length)],
         doorColor: doorColors[Math.floor(Math.random() * doorColors.length)],
         windowColor: 0x537d90,
-        scale: Math.random() * 0.5 + 0.75,
+        scale: scale,
         doorType: doorType[Math.floor(Math.random() * doorType.length)],
         windowType: windowType[Math.floor(Math.random() * windowType.length)],
     });
-     // Calculate the global position
-     let globalX = streetGroup.position.x + relativeX;
-     let globalZ = streetGroup.position.z + relativeZ;
+
+    // Calculate the global position
+    let globalX = streetGroup.position.x + relativeX;
+    let globalZ = streetGroup.position.z + relativeZ;
  
-     house.position.set(globalX, 0, globalZ);
-     house.rotation.y = rotateY;
- 
+    // Position the house so that it sits on the ground
+    const boundingBox = new THREE.Box3().setFromObject(house);
+    const houseMinY = boundingBox.min.y;
+
+    // Adjust position so the house sits on the ground
+    house.position.set(globalX, -houseMinY - 1, globalZ); // -1 to account for ground level at y = -1
+    house.rotation.y = rotateY;
 
     house.userData.address = `${streetName}`;
     
